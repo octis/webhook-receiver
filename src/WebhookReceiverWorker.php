@@ -1,6 +1,6 @@
 <?php
 
-namespace Webham\Devops;
+namespace Octis\Webhookreceiver;
 
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;

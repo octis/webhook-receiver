@@ -1,6 +1,6 @@
 <?php
 
-namespace Webham\Devops\WebhookReceiverWorker\Plugin;
+namespace Octis\Webhookreceiver\Plugin;
 
 use Symfony\Component\Filesystem\Filesystem;
 
