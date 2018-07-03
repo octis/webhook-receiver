@@ -95,22 +95,32 @@ class WebhookReceiverWorker
             if (!empty($this->requestVars->project->url)) {
                 // Check if current runner is with a declared git repo.
                 if (in_array($this->requestVars->project->url, array_keys($this->config['repos']))) {
-                    // Comparing the secret token and the branch.
-                    if ($this->config['repos'][$this->requestVars->project->url]['secret_token'] == $_GET['token'] &&
-                      $this->requestVars->refs == $this->config['repos'][$this->requestVars->project->url]['branch']) {
-                        $branch = $this->config['repos'][$this->requestVars->project->url]['branch'];
-                        foreach ($this->config['repos'][$this->requestVars->project->url]['callbacks'] as $callback) {
-                            // Calling the callback function.
-                            $output = $callback(
-                              $this->config['repos'][$this->requestVars->project->url],
-                              $this->requestVars
+                    // Comparing the secret token if on.
+                    if (!empty($this->config['repos'][$this->requestVars->project->url]['secret_token'])
+                      && $this->config['repos'][$this->requestVars->project->url]['secret_token'] == $_GET['token'] {
+                        // Comparing the branch.
+                        if ($this->requestVars->ref == $this->config['repos'][$this->requestVars->project->url]['branch']) {
+                            foreach ($this->config['repos'][$this->requestVars->project->url]['callbacks'] as $callback) {
+                                // Calling the callback function.
+                                $output = $callback['callback'](
+                                  $callback['arguments'],
+                                  $this->requestVars
+                                );
+                            }
+                        } else {
+                            throw new \Exception(
+                              'Branch does not match.'
                             );
                         }
                     } else {
-                        throw new \Exception('Secret is false.');
+                        throw new \Exception(
+                          'Secret is false.'
+                        );
                     }
                 } else {
-                    throw new \Exception('The repo that requested this file does not exist in the configuration.');
+                    throw new \Exception(
+                      'The repo that requested this file does not exist in the configuration.'
+                    );
                 }
             } else {
                 throw new \Exception(
@@ -118,7 +128,9 @@ class WebhookReceiverWorker
                 );
             }
         } else {
-            throw new \Exception('There are no repos declared.');
+            throw new \Exception(
+              'There are no repos declared.'
+            );
         }
 
         print $output;

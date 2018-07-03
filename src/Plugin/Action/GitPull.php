@@ -1,13 +1,13 @@
 <?php
 
-namespace Octis\Webhookreceiver\Plugin;
+namespace Octis\Webhookreceiver\Plugin\Action;
 
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * A plugin simply for making a git pull.
  */
-class GitPullPlugin
+class GitPull
 {
 
     /**
