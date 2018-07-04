@@ -4,6 +4,7 @@ namespace Octis\Webhookreceiver;
 
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * The main class that receives the webhook requests.
@@ -42,9 +43,11 @@ class WebhookReceiverWorker
     /**
     * {@inheritdoc}
     */
-    public function __construct()
+    public function __construct($ymlFile)
     {
         $this->fs = new Filesystem();
+        $this->buildFromYml($ymlFile);
+        
         $this->getRequestVars();
     }
 
@@ -53,7 +56,20 @@ class WebhookReceiverWorker
      */
     private function getRequestVars()
     {
-        $this->requestVars = json_decode(file_get_contents('php://input'));
+        $request = Request::createFromGlobals();
+
+        // @todo create the adapter manager
+
+        // @todo register adapters
+
+        // @todo get adapter
+
+        // @todo create an adapter manager.
+        // Implementing the adapter.
+        if (!empty($request->getContent())) {
+          $this->requestVars = new Octis\Webhookreceiver\Plugin\GitServer\GitLabAdapter($request);
+        }
+
     }
 
     /**
@@ -99,18 +115,18 @@ class WebhookReceiverWorker
                     if (!empty($this->config['repos'][$this->requestVars->project->url]['secret_token'])
                       && $this->config['repos'][$this->requestVars->project->url]['secret_token'] == $_GET['token'] {
                         // Comparing the branch.
-                        if ($this->requestVars->ref == $this->config['repos'][$this->requestVars->project->url]['branch']) {
-                            foreach ($this->config['repos'][$this->requestVars->project->url]['callbacks'] as $callback) {
-                                // Calling the callback function.
-                                $output = $callback['callback'](
-                                  $callback['arguments'],
-                                  $this->requestVars
+                        foreach ($this->config['repos'][$this->requestVars->project->url]['actions'] as $callback) {
+                            if ($this->requestVars->ref == $callback['trigger_branch']) {
+                              // Calling the callback function.
+                              $output = $callback['callback'](
+                                $callback['arguments'],
+                                $this->requestVars
+                              );
+                            } else {
+                                throw new \Exception(
+                                  'Branch does not match.'
                                 );
                             }
-                        } else {
-                            throw new \Exception(
-                              'Branch does not match.'
-                            );
                         }
                     } else {
                         throw new \Exception(

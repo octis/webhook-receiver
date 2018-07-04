@@ -11,14 +11,13 @@ class GitPull
 {
 
     /**
-     * A callback for the thing that the Plugin does.
+     * A callback for making a git pull.
      */
-    public static function execute($config, $requestVars)
+    public static function execute($arguments, $requestVars)
     {
         $fs = new Filesystem();
-        // Predefined command - pull (pulls the remote branch).
-        if (!empty($config['dir']) && $fs->exists($config['dir'])) {
-            $command = 'cd ' . $config['dir'] . ' && git pull origin ' . $config['branch'];
+        if (!empty($arguments['dir']) && $fs->exists($arguments['dir'])) {
+            $command = 'cd ' . $arguments['dir'] . ' && git pull origin ' . $arguments['branch'];
             return shell_exec($command);
         }
     }
