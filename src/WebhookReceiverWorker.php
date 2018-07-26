@@ -41,13 +41,12 @@ class WebhookReceiverWorker
     private $fs;
 
     /**
-    * {@inheritdoc}
-    */
+     * {@inheritdoc}
+     */
     public function __construct($ymlFile)
     {
         $this->fs = new Filesystem();
         $this->buildFromYml($ymlFile);
-        
         $this->getRequestVars();
     }
 
