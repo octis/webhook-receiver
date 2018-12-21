@@ -6,8 +6,13 @@ use Symfony\Component\HttpFoundation\Request;
 
 /**
  * A class for the GitHub server specifics.
+ *
+ * @Info(
+ *   id = "gitlab",
+ *   type = "git_server_adapter",
+ * )
  */
-class GitLabAdapter {
+class GitLabServerAdapter {
 
   /**
    * The request variables.
@@ -25,7 +30,12 @@ class GitLabAdapter {
   /**
    * Constructing.
    */
-  public function __construct(Request $request) {
+  public function __construct() {}
+
+  /**
+   * Building the request here.
+   */
+  public function buildRequest(Request $request) {
     $this->request = $request;
     $this->setRequestVars($this->request);
   }
@@ -45,14 +55,14 @@ class GitLabAdapter {
   }
 
   /**
-   * Return the git repo url.
+   * Returning the git repo url.
    */
-  public function getGitUrl() {
+  public function getRepoUrl() {
     return $this->requestVars->project->url;
   }
 
   /**
-   * Return the triggering branch.
+   * Returning the triggering branch.
    */
   public function getTriggerBranch() {
     return $this->requestVars->ref;
@@ -62,7 +72,12 @@ class GitLabAdapter {
    * Returning the secret value.
    */
   public function getSecret() {
-    return 'secret';
+    if ($this->request->headers->has('X-Gitlab-Token')) {
+      return $this->request->headers->get('X-Gitlab-Token');
+    }
+    else {
+      return '';
+    }
   }
 
   /**

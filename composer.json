@@ -17,7 +17,8 @@
         "symfony/yaml": "^4.1",
         "symfony/filesystem": "^4.1",
         "symfony/http-foundation": "^4.1",
-        "php": ">=5.3.0"
+        "php": ">=5.3.0",
+        "doctrine/common": "^2.10"
     },
     "autoload": {
         "psr-4": { "Octis\\Webhookreceiver\\": "src" }

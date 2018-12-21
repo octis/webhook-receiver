@@ -5,6 +5,7 @@ namespace Octis\Webhookreceiver;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\HttpFoundation\Request;
+use Octis\Webhookreceiver\GitServerAdapterManager;
 
 /**
  * The main class that receives the webhook requests.
@@ -39,36 +40,27 @@ class WebhookReceiverWorker
      * @var Filesystem
      */
     private $fs;
+    private $gitServerAdapterManager;
+    private $gitServerAdapters;
+    private $request;
 
     /**
-     * {@inheritdoc}
-     */
+    * {@inheritdoc}
+    */
     public function __construct($ymlFile)
     {
         $this->fs = new Filesystem();
         $this->buildFromYml($ymlFile);
-        $this->getRequestVars();
+        $this->request = Request::createFromGlobals();
+        $this->gitServerAdapterManager = new GitServerAdapterManager()
+        $this->gitServerAdapters = $this->gitServerAdapterManager->registerAdapters();
     }
 
     /**
-     * Getting the variables from the webhook request.
+     * Registering own git server adapters from here.
      */
-    private function getRequestVars()
-    {
-        $request = Request::createFromGlobals();
-
-        // @todo create the adapter manager
-
-        // @todo register adapters
-
-        // @todo get adapter
-
-        // @todo create an adapter manager.
-        // Implementing the adapter.
-        if (!empty($request->getContent())) {
-          $this->requestVars = new Octis\Webhookreceiver\Plugin\GitServer\GitLabAdapter($request);
-        }
-
+    public function registerCustomAdapters($adapterId, $adapterClass) {
+      $this->gitServerAdapters[$adapterId] = $adapterClass;
     }
 
     /**
@@ -100,26 +92,39 @@ class WebhookReceiverWorker
     {
 
         if (!empty($this->logger)) {
-            $this->logger->log('status', $this->requestVars);
+            $this->logger->log('status', $this->request);
         }
 
         $output = 'Nothing executed.';
 
         // Check if there are any defined repos.
-        if ((count($this->config['repos']) > 0)) {
-            if (!empty($this->requestVars->project->url)) {
+        if (count($this->config['repos']) > 0) {
+
+            foreach ($this->config['repos'] as $repo) {
+
+                if (
+                  !empty($repo['git_server_type'])
+                  && !empty($this->gitServerAdapters[$repo['git_server_type']])
+                ) {
+                  $currentRepoRequest = $this
+                    ->gitServerAdapters[$repo['git_server_type']]
+                    ->buildRequest($this->request);
+                }
+
                 // Check if current runner is with a declared git repo.
-                if (in_array($this->requestVars->project->url, array_keys($this->config['repos']))) {
+                if ($currentRepoRequest->getRepoUrl() == $repo['git_url'])) {
                     // Comparing the secret token if on.
-                    if (!empty($this->config['repos'][$this->requestVars->project->url]['secret_token'])
-                      && $this->config['repos'][$this->requestVars->project->url]['secret_token'] == $_GET['token'] {
+                    if (
+                      !empty($repo['secret_token'])
+                      && ($repo['secret_token'] == $currentRepoRequest->getSecret())
+                    ) {
                         // Comparing the branch.
-                        foreach ($this->config['repos'][$this->requestVars->project->url]['actions'] as $callback) {
-                            if ($this->requestVars->ref == $callback['trigger_branch']) {
+                        foreach ($repo['actions'] as $callback) {
+                            if ($currentRepoRequest->getTriggerBranch() == $callback['trigger_branch']) {
                               // Calling the callback function.
                               $output = $callback['callback'](
                                 $callback['arguments'],
-                                $this->requestVars
+                                $currentRepoRequest
                               );
                             } else {
                                 throw new \Exception(
@@ -129,19 +134,12 @@ class WebhookReceiverWorker
                         }
                     } else {
                         throw new \Exception(
-                          'Secret is false.'
+                          'Secret is false or not set.'
                         );
                     }
-                } else {
-                    throw new \Exception(
-                      'The repo that requested this file does not exist in the configuration.'
-                    );
                 }
-            } else {
-                throw new \Exception(
-                    'There is no request. This API point is supposed to be requested by a git webhook.'
-                );
             }
+
         } else {
             throw new \Exception(
               'There are no repos declared.'
