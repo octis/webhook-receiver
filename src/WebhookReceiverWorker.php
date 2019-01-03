@@ -68,7 +68,7 @@ class WebhookReceiverWorker
      *
      * @param LoggerInterface $logger
      */
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger($logger)
     {
         $this->logger = $logger;
     }
@@ -80,7 +80,10 @@ class WebhookReceiverWorker
     {
 
         if (!empty($this->logger)) {
-            $this->logger->log('status', $this->request);
+            $this->logger->log(
+              100,
+              print_r($this->request, true)
+            );
         }
 
         $output = 'Nothing executed.';
