@@ -51,10 +51,24 @@ class GitLabServerAdapter implements GitServerAdapterInterface {
   }
 
   /**
+   * Check if there is a git repo url.
+   */
+  public function hasRepoUrl() {
+    return !empty($this->requestVars->project->url) ? true : false;
+  }
+
+  /**
    * Returning the git repo url.
    */
   public function getRepoUrl() {
     return $this->requestVars->project->url;
+  }
+
+  /**
+   * Check if there is a triggering branch.
+   */
+  public function hasTriggerBranch() {
+    return !empty($this->requestVars->ref) ? true : false;
   }
 
   /**

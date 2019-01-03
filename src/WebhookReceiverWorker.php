@@ -109,7 +109,10 @@ class WebhookReceiverWorker
                 }
 
                 // Check if current runner is with a declared git repo.
-                if ($gitServerAdapter->getRepoUrl() == $repo['git_url']) {
+                if (
+                  $gitServerAdapter->hasRepoUrl()
+                  && $gitServerAdapter->getRepoUrl() == $repo['git_url']
+                ) {
                     // Comparing the secret token if on.
                     if (
                       !empty($repo['secret_token'])
@@ -118,7 +121,8 @@ class WebhookReceiverWorker
                         // Comparing the branch.
                         foreach ($repo['actions'] as $callback) {
                             if (
-                              $gitServerAdapter->getTriggerBranch() == $callback['trigger_branch']
+                              $gitServerAdapter->hasTriggerBranch()
+                              && $gitServerAdapter->getTriggerBranch() == $callback['trigger_branch']
                             ) {
                               // Calling the callback function.
                               $output = $callback['callback'](

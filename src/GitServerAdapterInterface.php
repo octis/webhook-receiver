@@ -16,12 +16,28 @@ interface GitServerAdapterInterface {
   public function getType();
 
   /**
+   * Check if the git repo URL paramether exists.
+   *
+   * @return bool
+   *   True if the paramether exists.
+   */
+  public function hasRepoUrl();
+
+  /**
    * Retrieve a parameter from the Git server response.
    *
    * @return string
    *   The Git repository URL.
    */
   public function getRepoUrl();
+
+  /**
+   * Check if the git repo trigger branch paramether exists.
+   *
+   * @return bool
+   *   True if the paramether exists.
+   */
+  public function hasTriggerBranch();
 
   /**
    * Retrieve a parameter from the Git server response.
