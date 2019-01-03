@@ -3,16 +3,12 @@
 namespace Octis\Webhookreceiver\Plugin\GitServer;
 
 use Symfony\Component\HttpFoundation\Request;
+use Octis\Webhookreceiver\GitServerAdapterInterface;
 
 /**
  * A class for the GitHub server specifics.
- *
- * @Info(
- *   id = "gitlab",
- *   type = "git_server_adapter",
- * )
  */
-class GitLabServerAdapter {
+class GitLabServerAdapter implements GitServerAdapterInterface {
 
   /**
    * The request variables.

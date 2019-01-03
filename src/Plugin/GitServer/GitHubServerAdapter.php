@@ -2,11 +2,12 @@
 
 namespace Octis\Webhookreceiver\Plugin\GitServer;
 
+use use Octis\Webhookreceiver\GitServerAdapterInterface;
+
 /**
  * A class for the GitHub server specifics.
- * @type = 'git_adapter'
  */
-class GitHubServerAdapter {
+class GitHubServerAdapter implements GitServerAdapterInterface {
 
     private $requestVars;
 

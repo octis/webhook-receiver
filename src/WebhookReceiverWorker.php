@@ -5,7 +5,6 @@ namespace Octis\Webhookreceiver;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\HttpFoundation\Request;
-use Octis\Webhookreceiver\GitServerAdapterManager;
 
 /**
  * The main class that receives the webhook requests.
@@ -40,8 +39,6 @@ class WebhookReceiverWorker
      * @var Filesystem
      */
     private $fs;
-    private $gitServerAdapterManager;
-    private $gitServerAdapters;
     private $request;
 
     /**
@@ -52,15 +49,6 @@ class WebhookReceiverWorker
         $this->fs = new Filesystem();
         $this->buildFromYml($ymlFile);
         $this->request = Request::createFromGlobals();
-        $this->gitServerAdapterManager = new GitServerAdapterManager()
-        $this->gitServerAdapters = $this->gitServerAdapterManager->registerAdapters();
-    }
-
-    /**
-     * Registering own git server adapters from here.
-     */
-    public function registerCustomAdapters($adapterId, $adapterClass) {
-      $this->gitServerAdapters[$adapterId] = $adapterClass;
     }
 
     /**
@@ -102,13 +90,12 @@ class WebhookReceiverWorker
 
             foreach ($this->config['repos'] as $repo) {
 
+                // Load the adapter.
                 if (
-                  !empty($repo['git_server_type'])
-                  && !empty($this->gitServerAdapters[$repo['git_server_type']])
+                  is_subclass_of($repo['git_server_adapter'], 'GitServerAdapterInterface')
                 ) {
-                  $currentRepoRequest = $this
-                    ->gitServerAdapters[$repo['git_server_type']]
-                    ->buildRequest($this->request);
+                  $gitServerAdapter = new $repo['git_server_adapter'];
+                  $currentRepoRequest = $gitServerAdapter->buildRequest($this->request);
                 }
 
                 // Check if current runner is with a declared git repo.
@@ -120,7 +107,9 @@ class WebhookReceiverWorker
                     ) {
                         // Comparing the branch.
                         foreach ($repo['actions'] as $callback) {
-                            if ($currentRepoRequest->getTriggerBranch() == $callback['trigger_branch']) {
+                            if (
+                              $currentRepoRequest->getTriggerBranch() == $callback['trigger_branch']
+                            ) {
                               // Calling the callback function.
                               $output = $callback['callback'](
                                 $callback['arguments'],
