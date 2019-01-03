@@ -91,29 +91,39 @@ class WebhookReceiverWorker
             foreach ($this->config['repos'] as $repo) {
 
                 // Load the adapter.
-                if (
-                  is_subclass_of($repo['git_server_adapter'], 'GitServerAdapterInterface')
-                ) {
+                if (!empty($repo['git_server_adapter'])) {
                   $gitServerAdapter = new $repo['git_server_adapter'];
-                  $currentRepoRequest = $gitServerAdapter->buildRequest($this->request);
+
+                  if (
+                    is_subclass_of($gitServerAdapter, 'Octis\Webhookreceiver\GitServerAdapterInterface')
+                  ) {
+                    $gitServerAdapter->buildRequest(
+                      $this->request
+                    );
+                  }
+                  else {
+                    throw new \Exception(
+                      'You have to define a git server adapter class.'
+                    );
+                  }
                 }
 
                 // Check if current runner is with a declared git repo.
-                if ($currentRepoRequest->getRepoUrl() == $repo['git_url']) {
+                if ($gitServerAdapter->getRepoUrl() == $repo['git_url']) {
                     // Comparing the secret token if on.
                     if (
                       !empty($repo['secret_token'])
-                      && ($repo['secret_token'] == $currentRepoRequest->getSecret())
+                      && ($repo['secret_token'] == $gitServerAdapter->getSecret())
                     ) {
                         // Comparing the branch.
                         foreach ($repo['actions'] as $callback) {
                             if (
-                              $currentRepoRequest->getTriggerBranch() == $callback['trigger_branch']
+                              $gitServerAdapter->getTriggerBranch() == $callback['trigger_branch']
                             ) {
                               // Calling the callback function.
                               $output = $callback['callback'](
                                 $callback['arguments'],
-                                $currentRepoRequest
+                                $gitServerAdapter->getRawRequestVars()
                               );
                             } else {
                                 throw new \Exception(
