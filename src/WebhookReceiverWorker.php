@@ -99,7 +99,7 @@ class WebhookReceiverWorker
                 }
 
                 // Check if current runner is with a declared git repo.
-                if ($currentRepoRequest->getRepoUrl() == $repo['git_url'])) {
+                if ($currentRepoRequest->getRepoUrl() == $repo['git_url']) {
                     // Comparing the secret token if on.
                     if (
                       !empty($repo['secret_token'])
