@@ -40,6 +40,7 @@ class WebhookReceiverWorker
      */
     private $fs;
     private $request;
+    private $output = 'Nothing executed.';
 
     /**
     * {@inheritdoc}
@@ -86,8 +87,6 @@ class WebhookReceiverWorker
             );
         }
 
-        $output = 'Nothing executed.';
-
         // Check if there are any defined repos.
         if (count($this->config['repos']) > 0) {
 
@@ -128,7 +127,7 @@ class WebhookReceiverWorker
                               && $gitServerAdapter->getTriggerBranch() == $callback['trigger_branch']
                             ) {
                               // Calling the callback function.
-                              $output = $callback['callback'](
+                              $this->output = $callback['callback'](
                                 $callback['arguments'],
                                 $gitServerAdapter->getRawRequestVars()
                               );
@@ -145,13 +144,12 @@ class WebhookReceiverWorker
                     }
                 }
             }
-
         } else {
             throw new \Exception(
               'There are no repos declared.'
             );
         }
 
-        print $output;
+        print $this->output;
     }
 }
