@@ -86,7 +86,7 @@ class WebhookReceiverWorker
       header("Content-Length: " . ob_get_length());
       ob_end_flush();
       flush();
-      return 'Running hook callback ...';
+      return 'Running hook callbacks ...';
     }
 
     /**
@@ -101,6 +101,9 @@ class WebhookReceiverWorker
               print_r($this->request, true)
             );
         }
+
+        // Ensuring early headers not to time out.
+        print $this->ensureEarlyHeaders();
 
         // Check if there are any defined repos.
         if (count($this->config['repos']) > 0) {
@@ -141,8 +144,6 @@ class WebhookReceiverWorker
                               $gitServerAdapter->hasTriggerBranch()
                               && $gitServerAdapter->getTriggerBranch() == $callback['trigger_branch']
                             ) {
-                              // Ensuring early headers not to time out.
-                              print $this->ensureEarlyHeaders();
                               // Calling the callback function.
                               $this->output = $callback['callback'](
                                 $callback['arguments'],
