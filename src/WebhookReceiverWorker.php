@@ -83,10 +83,10 @@ class WebhookReceiverWorker
       ignore_user_abort();
       ob_start();
       header("Connection: close");
-      print 'Running hook callback ...';
       header("Content-Length: " . ob_get_length());
       ob_end_flush();
       flush();
+      return 'Running hook callback ...';
     }
 
     /**
@@ -142,7 +142,7 @@ class WebhookReceiverWorker
                               && $gitServerAdapter->getTriggerBranch() == $callback['trigger_branch']
                             ) {
                               // Ensuring early headers not to time out.
-                              $this->ensureEarlyHeaders();
+                              print $this->ensureEarlyHeaders();
                               // Calling the callback function.
                               $this->output = $callback['callback'](
                                 $callback['arguments'],
