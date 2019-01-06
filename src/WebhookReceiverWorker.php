@@ -45,10 +45,12 @@ class WebhookReceiverWorker
     /**
     * {@inheritdoc}
     */
-    public function __construct($ymlFile)
+    public function __construct($ymlFile = '')
     {
         $this->fs = new Filesystem();
-        $this->buildFromYml($ymlFile);
+        if (!empty($ymlFile)) {
+          $this->buildFromYml($ymlFile);
+        }
         $this->request = Request::createFromGlobals();
     }
 
@@ -61,6 +63,18 @@ class WebhookReceiverWorker
             $this->config = Yaml::parse(file_get_contents($pathToYmlFile));
         } else {
             throw new \Exception('YML file does not exist');
+        }
+    }
+
+    /**
+     * Building the Receiver from array.
+     */
+    public function buildFromArray($configArray)
+    {
+        if (!empty($configArray)) {
+            $this->config = $configArray;
+        } else {
+            throw new \Exception('Config array does not exist.');
         }
     }
 
@@ -86,7 +100,7 @@ class WebhookReceiverWorker
       header("Content-Length: " . ob_get_length());
       ob_end_flush();
       flush();
-      return 'Running hook callbacks ...';
+      return 'Running hook callback ...';
     }
 
     /**
@@ -101,9 +115,6 @@ class WebhookReceiverWorker
               print_r($this->request, true)
             );
         }
-
-        // Ensuring early headers not to time out.
-        print $this->ensureEarlyHeaders();
 
         // Check if there are any defined repos.
         if (count($this->config['repos']) > 0) {
