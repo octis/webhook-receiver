@@ -126,6 +126,14 @@ class WebhookReceiverWorker
                               $gitServerAdapter->hasTriggerBranch()
                               && $gitServerAdapter->getTriggerBranch() == $callback['trigger_branch']
                             ) {
+                              ob_end_clean();
+                              ignore_user_abort();
+                              ob_start();
+                              header("Connection: close");
+                              print 'Running hook callback ...';
+                              header("Content-Length: " . ob_get_length());
+                              ob_end_flush();
+                              flush();
                               // Calling the callback function.
                               $this->output = $callback['callback'](
                                 $callback['arguments'],
